@@ -305,9 +305,9 @@
 
     #btn-send {
         position: absolute;
-        right: 1.5rem;
-        bottom: 1.5rem;
-        font-size: 1rem;
+        right: 0.5rem;
+        bottom: 0.5rem;
+        font-size: 1.5rem;
     }
 
     @keyframes spin {
@@ -972,7 +972,7 @@
                     </label>
                     <div id="personalitiesDiv"></div>
                     <div class="btn-array" id="btn-array-personality-section">
-                        <button id="btn-add-personality">Add</button>
+                        <button id="btn-add-personality">Build</button>
                         <button id="btn-import-personality">Import</button>
                         <button id="btn-clearall-personality">Clear All</button>
                     </div>
@@ -988,16 +988,17 @@
                     <input type="number" id="maxTokens" class="input-field" min="1" max="4000" value="1000"></input>
                     <label for="safetySettings">Safety Settings</label>
                     <select id="safetySettings" class="input-field">
-                        <option value="safe">Safe</option>
-                        <option value="moderate">Moderate</option>
                         <option value="risky">Risky</option>
+                        
+                        <option value="moderate">Moderate</option>
+                        
+                        <option value="safe">Safe</option>
                     </select>
                     <label for="temperature">Temperature</label>
                     <div class="btn-array">
                         <input type="range" min="20" max="200" id="temperature" class="slider">
                         <label id="label-temperature">0</label>
                     </div>
-                    
                     
                 </div>
             </div>
