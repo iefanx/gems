@@ -1,23 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NostrAi, by iefan</title>
+    <title>Gems</title>
     <link rel="shortcut icon" href="https://upload.wikimedia.org/wikipedia/commons/f/f0/Google_Bard_logo.svg"
         type="image/x-icon">
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.css">
     <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
 </head>
 
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-VCHJXFGB08"></script>
 <script>
-  
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-VCHJXFGB08');
 </script>
 
 <style>
@@ -76,17 +80,16 @@
     }
 
     a {
-        color: #777777;
+        color: #3b82f6;
     }
 
-    
     input,
     textarea,
     select {
         border: 1px solid;
         padding: 0.5rem;
         border-radius: 0.5rem;
-        border: gray;
+        border: none;
         font-family: noto sans, sans-serif;
         font-size: 1rem;
     }
@@ -106,6 +109,12 @@
         justify-content: center;
     }
 
+    .slider{
+        margin: 0;
+        padding: 0;
+        flex-grow:1;
+    }
+
     .overlay {
         flex-direction: column;
         display: none;
@@ -121,7 +130,7 @@
         align-items: center;
     }
 
-    #whats-new{
+    #whats-new {
         display: none;
         flex-direction: column;
         max-width: 80%;
@@ -149,7 +158,7 @@
 
     .message-container {
         display: flex;
-        flex-direction: column-reverse;
+        flex-direction: column;
         overflow-y: auto;
         gap: 1rem;
         padding-bottom: 2rem;
@@ -194,31 +203,131 @@
         font-size: inherit;
     }
 
+    .label-currentchat {
+        display: flex;
+        gap: 1rem;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        transition: all 0.2s;
+        cursor: pointer;
+
+    }
+
+    .label-currentchat * {
+        cursor: inherit;
+    }
+
+    .label-currentchat:hover {
+
+        background-color: #00000024;
+    }
+
+    @font-face {
+        font-family: 'gt-america';
+        src: url("./gt-america-standard-regular.ttf");
+    }
+
+    @font-face {
+        font-family: 'ubuntu-webfont';
+        src: url("./ubuntu-bold-italic-webfont.ttf");
+    }
+
+    @font-face {
+        font-family: 'paypal-sans';
+        src: url("./PayPalSansBig-Medium.ttf")
+    }
+
+    .card {
+        box-sizing: border-box;
+        border-radius: 0.5rem;
+        text-align: center;
+        text-decoration: none;
+        padding: 1rem;
+        transition: background-color 0.25s ease-out;
+    }
+
+    .card-patreon {
+        background: #f96854;
+        color: #69160b;
+    }
+
+    .card-patreon:hover {
+        background: #d35747;
+    }
+
+    .patreon-logo {
+        font-family: 'gt-america';
+        font-weight: bolder;
+        color: #052d49;
+    }
+
+    .card-paypal {
+        background: white;
+        color: rgb(87, 87, 87);
+    }
+
+    .card-paypal:hover {
+        background: rgb(231, 231, 231);
+    }
+
+    .paypal-logo1 {
+        font-family: 'paypal-sans';
+        font-style: italic;
+        color: #003087;
+    }
+
+    .paypal-logo2 {
+        font-family: 'paypal-sans';
+        font-style: italic;
+        color: #009cde;
+    }
+
+    .card-liberapay {
+        background: #f6c915;
+        color: #816908;
+    }
+
+    .card-liberapay:hover {
+        background: #dab213;
+    }
+
+    .liberapay-logo {
+        font-family: 'ubuntu-webfont';
+        color: #1a171b;
+    }
+
+    .card-personality {
+        .btn-textual {
+            color: #e4e4e4;
+            text-shadow: 0 0 10px #000000, 0 0 5px #181818;
+        }
+    }
+
     #btn-send {
         position: absolute;
-        right: 1.5rem;
-        bottom: 1.5rem;
-        font-size: 1rem;
+        right: 0.5rem;
+        bottom: 0.5rem;
+        font-size: 1.5rem;
     }
 
     @keyframes spin {
         0% {
             border-color: #85e0fb;
         }
+
         50% {
             border-color: #253a5c;
         }
+
         100% {
             border-color: #85e0fb;
         }
     }
 
-    .badge{
+
+    .badge {
         display: none;
-        background-color: #253a5c;
         justify-self: end;
-        border: 2px solid rgba(35, 108, 119, 0.508);
-        color: #85e0fb;
         padding: 0.5rem;
         border-radius: 1rem;
         font-size: 0.75rem;
@@ -227,7 +336,13 @@
         transition: width ease-in-out 0.25s, gap ease-in-out 0.25s;
     }
 
-    .badge-highlight{
+    .title-chat {
+        flex-grow: 1;
+        text-wrap: nowrap;
+        overflow-x: hidden;
+    }
+
+    .badge-highlight {
         animation: spin 1s ease infinite;
     }
 
@@ -236,16 +351,25 @@
         flex-direction: row;
         justify-content: stretch;
         gap: 0.5rem;
-        margin-top: 0.5rem;
     }
 
     .btn-array button {
         flex: 1;
     }
 
+    .btn-array-vertical {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        * {
+            flex-grow: 1;
+        }
+    }
+
+
     .personality-prompt {
         display: none;
-        
     }
 
     .prompt-field {
@@ -268,7 +392,7 @@
     .sidebar {
         position: sticky;
         top: 1rem;
-
+        flex-shrink: 0;
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
@@ -328,14 +452,24 @@
         width: 100%;
         padding: 0.5rem;
         text-align: center;
-
+        border-radius: 0.5rem;
         z-index: 2;
         -webkit-tap-highlight-color: transparent;
         cursor: pointer;
-
+        transition: all 0.2s;
     }
 
+    /* same but if not have 'test' class */
+    .navbar-tab:not(.navbar-tab-active):hover {
+        background-color: #54545419;
+    }
 
+    .message-header{
+        display: flex;
+        h3{
+            flex-grow:1;
+        }
+    }
 
     .navbar-tab-highlight {
         padding: 0;
@@ -352,14 +486,20 @@
     #gemini-pro-branding {
         font-family: Google Sans Display, sans-serif;
         color: #7c8a9c;
-        font-size: 1.2rem;
-        font-weight: 400;
+        font-size: 1.1rem;
+        font-weight: 600;
         width: max-content;
     }
 
     #gemin-pro-logo {
-        width: 2rem;
-        height: 2rem;
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+
+    #chatHistorySection {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
     }
 
     .credits {
@@ -375,8 +515,8 @@
     }
 
     button {
+        font-weight: 600;
         border: none;
-        background-color: #3b82f6;
         color: white;
         padding: 0.5rem;
         border-radius: 0.5rem;
@@ -385,6 +525,7 @@
 
     #mainContent {
         display: flex;
+        flex-shrink: 0;
         flex-direction: column;
         padding: 2rem;
         margin-left: auto;
@@ -412,11 +553,6 @@
         cursor: pointer;
         text-shadow: 0 0 10px #000000, 0 0 5px #181818;
     }
-
-    .edit:hover {
-        text-shadow: 0 0 10px #e4e4e4, 0 0 5px #dfdfdf;
-    }
-
 
     .card-personality * {
         /* unselectable */
@@ -461,6 +597,15 @@
         color: #e4e4e4;
     }
 
+    .input-radio-currentchat {
+        display: none;
+    }
+
+    .input-radio-currentchat:checked+div {
+        background-color: #00000024;
+    }
+
+
     #btn-hide-overlay {
         padding: 2rem;
     }
@@ -468,7 +613,7 @@
 
 
 
-    @media (max-width: 768px) {
+    @media (max-width: 1032px) {
         body {
             margin: 0;
             padding: 0;
@@ -511,7 +656,8 @@
         }
 
         #mainContent .header {
-            padding: 0.5rem;
+            padding: 0.8rem;
+            padding-top: 0.3rem;
         }
 
         #messageInput {
@@ -555,18 +701,21 @@
             background-color: #87b0ed;
         }
 
+        .btn-textual {
+            color: #0a0a0a;
+        }
+
         .btn-textual:hover {
             text-shadow: 0 0 10px #000000;
         }
 
         button {
-            background-color: #777777;
-
-            color: #2b3d59;
+            background-color: #9dc2f7;
+            color: #0e1928;
         }
 
         button:hover {
-            background-color: rgb(63, 191, 255);
+            background-color: #7fb1f3;
         }
 
 
@@ -574,7 +723,7 @@
         textarea,
         select {
             background-color: #f0f6ff;
-            outline: 1px solid #8f9eb3;
+            outline: 1px solid #54545428;
         }
 
         input::placeholder,
@@ -585,9 +734,20 @@
         .message-model {
             background-color: #d2e2f7;
         }
+
+        .badge {
+            background-color: #87d3ed;
+            border: 1px solid rgba(27, 104, 123, 0.508);
+            color: #34545c;
+        }
+
+        .badge:hover {
+            background-color: #6fd5f7;
+        }
     }
-/* Dark theme styles */
-@media (prefers-color-scheme: dark) {
+
+    /* Dark theme styles */
+    @media (prefers-color-scheme: dark) {
     :root {
         color-scheme: dark;
     }
@@ -752,6 +912,8 @@
     #btn-reset-chat:hover {
         background-color: #313131;
     }
+
+
 </style>
 
 <body>
@@ -761,9 +923,9 @@
                 <button class="material-symbols-outlined btn-textual" id="btn-hide-sidebar">
                     arrow_back_ios_new
                 </button>
-                
+                <img src="https://upload.wikimedia.org/wikipedia/commons/f/f0/Google_Bard_logo.svg" id="gemin-pro-logo">
                 <div id="title-div">
-                    <div id="zodiac-branding"></div>
+                    <div id="zodiac-branding"> </div>
                     <div id="gemini-pro-branding">Custom Gems</div>
                 </div>
                 <button class="badge" id="btn-whatsnew">
@@ -771,23 +933,37 @@
                 </button>
             </div>
             <div class="navbar">
+                <div class="navbar-tab">Chats</div>
                 <div class="navbar-tab">Personalities</div>
                 <div class="navbar-tab">Settings</div>
                 <div class="navbar-tab-highlight"></div>
             </div>
-
             <div id="sidebar-content">
+                <div class="sidebar-section">
+                    <div class="btn-array">
+                        <button id="btn-new-chat">New</button>
+                        <button id="btn-reset-chat">Clear All</button>
+                    </div>
+
+
+                    <div id="chatHistorySection">
+                    </div>
+                </div>
+
                 <div class="sidebar-section" id="personalitySection">
                     <label class="card-personality" id="card-personality-default"
                         style="background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('')">
                         <input type="radio" name="personality" value="zodiac" checked>
                         <div>
-                            <h3 class="personality-title">
-                                Personal Ai</h3>
-                            <p class="personality-description">Personal Ai is a informative assistant, always ready to help you
+                            <h3 class="personality-title">Aithena</h3>
+                            <p class="personality-description">Aithena is a cheerful assistant, always ready to help you
                                 with
                                 your tasks.</p>
-                            <p class="personality-prompt">it's a informative & uncensored assistant power by WebCore, trained by iefan</p>
+                            <p class="personality-prompt">You are zodiac, a helpful assistant created by Iefan,
+                                built
+                                upon Google's Gemini Pro model. Gemini Pro is a new LLM (Large Language Model) release
+                                by
+                                Google on December 2023. Your purpose is being a helpful assistant to the user.</p>
                         </div>
                         <button class="btn-textual btn-edit-card material-symbols-outlined"
                             id="btn-edit-personality-default">edit</button>
@@ -796,23 +972,40 @@
                     </label>
                     <div id="personalitiesDiv"></div>
                     <div class="btn-array" id="btn-array-personality-section">
-                        <button id="btn-add-personality">Build</button>
+                        <button id="btn-add-personality">Add</button>
                         <button id="btn-import-personality">Import</button>
                         <button id="btn-clearall-personality">Clear All</button>
                     </div>
                 </div>
 
                 <div class="sidebar-section">
+                    <span>
+                        <h3>API Key</h3>
+                    </span>
                     <input type="text" placeholder="Paste API key here" id="apiKeyInput" class="input-field"></input>
-                    <h3>Generation Settings:</h3>
-                    <label for="maxTokens">Max Output Tokens:</label>
+                    <h3>Generation Settings</h3>
+                    <label for="maxTokens">Max Output Tokens</label>
                     <input type="number" id="maxTokens" class="input-field" min="1" max="4000" value="1000"></input>
-                    <label for="safetySettings">Safety Settings:</label>
+                    <label for="safetySettings">Safety Settings</label>
                     <select id="safetySettings" class="input-field">
-                        <option value="risky">Risky</option>
-                        <option value="moderate">Moderate</option>
                         <option value="safe">Safe</option>
+                        <option value="moderate">Moderate</option>
+                        <option value="risky">Risky</option>
                     </select>
+                    <label for="temperature">Temperature</label>
+                    <div class="btn-array">
+                        <input type="range" min="20" max="200" id="temperature" class="slider">
+                        <label id="label-temperature">0</label>
+                    </div>
+                    <h3>Donate</h3>
+                    <div class="btn-array-vertical">
+                        <a href="https://patreon.com/faetalize" target="_blank" rel="noopener noreferrer" class="card card-patreon">Sponsor me on <span
+                                class="patreon-logo">PATREON</span></a>
+                        <a href="https://liberapay.com/faetalize" target="_blank" rel="noopener noreferrer" class="card card-liberapay">Sponsor me on <span
+                                class="liberapay-logo">liberapay</span></a>
+                        <a href="https://www.paypal.com/paypalme/alskdjaoiwdawwfq" target="_blank" rel="noopener noreferrer" class="card card-paypal">Donate once
+                            on <span class="paypal-logo1">Pay</span><span class="paypal-logo2">Pal</span></a>
+                    </div>
                 </div>
             </div>
 
@@ -825,7 +1018,7 @@
 
         <div id="mainContent">
             <div class="header">
-                <button class="menu-btn material-symbols-outlined btn-textual" id="btn-show-sidebar">
+                <button class="material-symbols-outlined btn-textual" id="btn-show-sidebar">
                     menu
                 </button>
             </div>
@@ -844,7 +1037,7 @@
         </div>
 
         <div class="form" id="form-add-personality">
-            <h1>Personalities</h1>
+            <h1>Add Personality</h1>
             <label for="personalityNameInput">Personality Name:</label>
             <input type="text" placeholder="Personality Name" id="personalityNameInput" class="input-field"></input>
             <label for="personalityDescriptionInput">Personality Description:</label>
@@ -876,14 +1069,14 @@
         <div id="whats-new">
             <h1 id="header-version">What's New in </h1>
             <ul id="changelog">
-                <li>Added ability to modify personalities</li>
-                <li>Added version badge</li>
-                <li>stability improvements</li>
+                <li>NEW: temperature is now adjustable, can range from 0.1 to 2 (numbers above 1.2 tend to cause incredibly creative hallucinations, use at your own risk)</li>
+                <li>added some links for ppl wishing to financially contribute with donations</li>
+                <li>more stability improvements</li>
             </ul>
         </div>
     </div>
 
-    <script type="module" src="./src/main.js"></script>
+    <script type="module" src="/src/main.js"></script>
 
 </body>
 
