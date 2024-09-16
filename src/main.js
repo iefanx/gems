@@ -2,11 +2,13 @@ import { marked } from "https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js";
 import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 import { HarmBlockThreshold, HarmCategory } from "https://esm.run/@google/generative-ai";
 
-const version = "0.1.3";
+
+const version = "0.7";
 
 //inputs
 const ApiKeyInput = document.querySelector("#apiKeyInput");
 const maxTokensInput = document.querySelector("#maxTokens");
+const temperatureInput = document.querySelector("#temperature");
 const messageInput = document.querySelector("#messageInput");
 
 //forms
@@ -24,6 +26,8 @@ const hideOverlayButton = document.querySelector("#btn-hide-overlay");
 const submitPersonalityEditButton = document.querySelector("#btn-submit-personality-edit");
 const hideSidebarButton = document.querySelector("#btn-hide-sidebar");
 const showSidebarButton = document.querySelector("#btn-show-sidebar");
+const deleteAllChatsButton = document.querySelector("#btn-reset-chat");
+const newChatButton = document.querySelector("#btn-new-chat");
 
 //containers
 const sidebar = document.querySelector(".sidebar");
@@ -32,10 +36,14 @@ const personalityCards = document.getElementsByClassName("card-personality");
 const formsOverlay = document.querySelector(".overlay");
 const sidebarViews = document.getElementsByClassName("sidebar-section");
 const defaultPersonalityCard = document.querySelector("#card-personality-default");
+const chatHistorySection = document.querySelector("#chatHistorySection");
 
 //nav elements
-const tabs = [...document.getElementsByClassName("navbar-tab")];
+const tabs = document.getElementsByClassName("navbar-tab");
 const tabHighlight = document.querySelector(".navbar-tab-highlight");
+
+//outputs
+const temperatureLabel = document.querySelector("#label-temperature");
 
 //misc
 const badge = document.querySelector("#btn-whatsnew");
@@ -44,8 +52,12 @@ const badge = document.querySelector("#btn-whatsnew");
 
 //load api key from local storage into input field
 ApiKeyInput.value = localStorage.getItem("API_KEY");
-maxTokensInput.value = localStorage.getItem("maxTokens");
-if (maxTokensInput.value == "") maxTokensInput.value = 1000;
+if (!localStorage.getItem("maxTokens")) maxTokensInput.value = 1000;
+
+//set initial temperature
+temperatureInput.value = localStorage.getItem("TEMPERATURE");
+if (!localStorage.getItem("TEMPERATURE")) temperatureInput.value = 70;
+temperatureLabel.textContent = temperatureInput.value/100;
 
 //define AI settings
 const safetySettings = [
@@ -65,7 +77,8 @@ const safetySettings = [
     {
         category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
         threshold: HarmBlockThreshold.BLOCK_NONE,
-    }
+    },
+
 ];
 const systemPrompt = "If needed, format your answer using markdown." +
     "Today's date is" + new Date().toDateString() + "." +
@@ -74,7 +87,7 @@ const systemPrompt = "If needed, format your answer using markdown." +
 //setup tabs
 let currentTab = undefined;
 tabHighlight.style.width = `calc(100% / ${tabs.length})`;
-tabs.forEach(tab => {
+[...tabs].forEach(tab => {
     tab.addEventListener("click", () => {
         navigateTo(tab);
     })
@@ -140,6 +153,25 @@ if (prevVersion != version) {
     }, 7000);
 }
 
+//indexedDB setup
+let db = new Dexie("chatDB");
+let currentChat = null;
+db.version(3).stores({
+    chats: `
+        ++id,
+        title,
+        timestamp,
+        content`,
+});
+
+
+//get all chats and load them in the template
+let chats = await getAllChatIdentifiers();
+for (let chat of chats) {
+    insertChatHistory(chat);
+}
+
+
 //event listeners
 hideOverlayButton.addEventListener("click", closeOverlay);
 
@@ -147,15 +179,35 @@ addPersonalityButton.addEventListener("click", showAddPersonalityForm);
 
 submitNewPersonalityButton.addEventListener("click", submitNewPersonality);
 
-submitPersonalityEditButton.addEventListener("click", () => {submitPersonalityEdit(personalityToEditIndex)});
+submitPersonalityEditButton.addEventListener("click", () => { submitPersonalityEdit(personalityToEditIndex) });
 
-sendMessageButton.addEventListener("click", run);
+temperatureInput.addEventListener("input", () => {
+    temperatureLabel.textContent = temperatureInput.value/100;
+});
+
+sendMessageButton.addEventListener("click", async () => {
+    try {
+        await run(messageInput,  getSelectedPersonality(), getChatHistory());
+    } catch (error) {
+        console.error(error);
+        alert(error)
+    }
+});
+
+newChatButton.addEventListener("click", () => {
+    if (!currentChat) {
+        return
+    }
+    currentChat = null;
+    messageContainer.innerHTML = "";
+    document.querySelector("input[name='currentChat']:checked").checked = false;
+});
 
 //enter key to send message but support shift+enter for new line
 messageInput.addEventListener("keydown", (e) => {
     if (e.key == "Enter" && !e.shiftKey) {
         e.preventDefault();
-        run();
+        sendMessageButton.click();
     }
 });
 
@@ -177,6 +229,8 @@ clearAllButton.addEventListener("click", () => {
         }
     });
 });
+
+deleteAllChatsButton.addEventListener("click", deleteAllChats);
 
 importPersonalityButton.addEventListener("click", () => {
     const fileInput = document.createElement('input');
@@ -255,9 +309,9 @@ function navigateTo(tab) {
     if (tab == tabs[currentTab]) {
         return;
     }
+    tab.classList.add("navbar-tab-active");
+
     // set the highlight to match the size of the tab element
-
-
     let tabIndex = [...tabs].indexOf(tab);
     if (tabIndex < 0 || tabIndex >= sidebarViews.length) {
         console.error("Invalid tab index: " + tabIndex);
@@ -266,12 +320,173 @@ function navigateTo(tab) {
 
     if (currentTab != undefined) {
         hideElement(sidebarViews[currentTab]);
+        tabs[currentTab].classList.remove("navbar-tab-active");
     }
     showElement(sidebarViews[tabIndex]);
     currentTab = tabIndex;
 
+
     tabHighlight.style.left = `calc(100% / ${tabs.length} * ${tabIndex})`;
 
+}
+
+async function getAllChatIdentifiers() {
+    try {
+        let identifiers = [];
+        await db.chats.orderBy('timestamp').each(
+            chat => {
+                identifiers.push({ id: chat.id, title: chat.title });
+            }
+        )
+        return identifiers;
+    } catch (error) {
+        //to be implemented
+        console.log(error);
+    }
+}
+
+
+async function getAllChats() {
+    try {
+        const chats = await db.chats.orderBy('timestamp').toArray(); // Get all objects
+        chats.reverse() //reverse in order to have the latest chat at the top
+        return chats;
+    } catch (error) {
+        console.error("Error getting titles:", error);
+        throw error;
+    }
+}
+
+async function getChatById(id) {
+    try {
+        const chat = await db.chats.get(id);
+        return chat;
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+async function onChatSelect(chatID, inputElement) {
+    try {
+        messageContainer.innerHTML = "";
+        let chat = await getChatById(chatID);
+        for await (let msg of chat.content) {
+            await insertMessage(msg.role, msg.txt, msg.personality);
+        }
+        currentChat = chatID;
+        messageContainer.scrollTo(0, messageContainer.scrollHeight);
+        inputElement.click();
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function deleteChat(id) {
+    try {
+        await db.chats.delete(id);
+        const input = chatHistorySection.querySelector(`#chat${id}`);
+        input.nextElementSibling.remove();
+        input.remove();
+        if (currentChat == id) {
+            messageContainer.innerHTML = "";
+            currentChat = null;
+        }
+    } catch (error) {
+        return console.error(error);
+    }
+}
+
+async function deleteAllChats() {
+    try {
+        await db.chats.clear();
+        messageContainer.innerHTML = "";
+        chatHistorySection.innerHTML = "";
+        currentChat = "";
+    }
+    catch (error) {
+        console.error("error deleting chats: ", error);
+    }
+}
+
+function getSelectedPersonality(){
+    try {
+        const selectedPersonalityProps = document.querySelector("input[name='personality']:checked + div");
+        return {
+            title: selectedPersonalityProps.querySelector(".personality-title").textContent,
+            description: selectedPersonalityProps.querySelector(".personality-description").textContent,
+            prompt: selectedPersonalityProps.querySelector(".personality-prompt").textContent,
+            tone: []
+        }
+    } catch (error) {
+        alert("No personality selected.");
+        console.error(error);
+        return;
+    }
+}
+
+function getChatHistory(){
+    let chatHistory = [];
+    [...messageContainer.children].forEach(element => {
+        const messageroleapi = element.querySelector(".message-role-api").innerText;
+        const messagetext = element.querySelector(".message-text").innerText;
+        chatHistory.push({
+            role: messageroleapi,
+            parts: [{ text: messagetext }]
+        })
+    });
+    return chatHistory;
+}
+
+function insertChatHistory(chat) {
+    const chatLabel = document.createElement("label");
+    chatLabel.setAttribute("for", "chat" + chat.id);
+    chatLabel.classList.add("title-chat");
+    chatLabel.textContent = chat.title;
+
+    const historyEntry = document.createElement("div");
+    historyEntry.classList.add("label-currentchat");
+
+    const chatIcon = document.createElement("span");
+    chatIcon.classList.add("material-symbols-outlined");
+    chatIcon.innerHTML = "chat_bubble";
+
+    const deleteEntryButton = document.createElement("button");
+    deleteEntryButton.classList.add("btn-textual", "material-symbols-outlined");
+    deleteEntryButton.textContent = "delete";
+    deleteEntryButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        deleteChat(chat.id);
+    })
+
+    historyEntry.append(chatIcon);
+    historyEntry.append(chatLabel);
+    historyEntry.append(deleteEntryButton);
+
+    chatHistorySection.prepend(historyEntry);
+
+    const chatElement = document.createElement("input");
+    chatElement.setAttribute("type", "radio");
+    chatElement.setAttribute("name", "currentChat");
+    chatElement.setAttribute("value", "chat" + chat.id);
+    chatElement.id = "chat" + chat.id;
+    chatElement.classList.add("input-radio-currentchat");
+    chatHistorySection.prepend(chatElement);
+    //
+    historyEntry.addEventListener("click", async () => { await onChatSelect(chat.id, chatElement); });
+}
+
+async function addChatHistory(title, firstMessage = null) {
+    try {
+        const id = await db.chats.put({
+            title: title,
+            timestamp: Date.now(),
+            content: firstMessage ? [{ role: "user", txt: firstMessage }] : []
+        });
+        insertChatHistory({ title, id });
+        return id
+    } catch (error) {
+        console.error(error);
+    }
 }
 
 function sharePersonality(personality) {
@@ -346,9 +561,9 @@ function insertPersonality(personalityJSON) {
     shareButton.addEventListener("click", () => {
         sharePersonality(personalityCard);
     });
-    
+
     //conditional because the default personality card doesn't have a delete button
-    if(deleteButton){
+    if (deleteButton) {
         deleteButton.addEventListener("click", () => {
             deleteLocalPersonality(Array.prototype.indexOf.call(personalityCard.parentNode.children, personalityCard));
             personalityCard.remove();
@@ -440,7 +655,7 @@ function submitPersonalityEdit(personalityIndex) {
         return;
     }
 
-    const personalityCard = [...personalityCards][personalityIndex+1]; //+1 because the default personality card is not in the array
+    const personalityCard = [...personalityCards][personalityIndex + 1]; //+1 because the default personality card is not in the array
     personalityCard.querySelector(".personality-title").innerText = newName;
     personalityCard.querySelector(".personality-description").innerText = newDescription;
     personalityCard.querySelector(".personality-prompt").innerText = newPrompt;
@@ -457,9 +672,6 @@ function submitPersonalityEdit(personalityIndex) {
     localStorage.setItem("personalities", JSON.stringify(personalitiesJSON));
     closeOverlay();
 }
-
-
-
 
 function getLocalPersonalities() {
     const personalitiesJSON = localStorage.getItem("personalities");
@@ -482,47 +694,102 @@ function showWhatsNew() {
     showElement(whatsNewDiv);
 }
 
-async function run() {
-    const msg = document.querySelector("#messageInput");
-    let msgText = getSanitized(msg.value);
-    msg.value = "";
-    document.getElementById('messageInput').style.height = "2.5rem"; //This will reset messageInput box to its normal size.
-    if (msgText == "") {
+async function insertMessage(sender, msgText, selectedPersonalityTitle = null, netStream = null) {
+    //create new message div for the user's message then append to message container's top
+    const newMessage = document.createElement("div");
+    newMessage.classList.add("message");
+    messageContainer.append(newMessage);
+    let messageRole;
+    //handle model's message
+    if (sender != "user") {
+        newMessage.classList.add("message-model");
+        messageRole = selectedPersonalityTitle;
+        newMessage.innerHTML = `
+            <div class="message-header"><h3 class="message-role">${messageRole}</h3>
+            <button class="btn-refresh btn-textual material-symbols-outlined" >refresh</button></div>
+            <div class="message-role-api" style="display: none;">${sender}</div>
+            <p class="message-text"></p>
+            `;
+        const refreshButton = newMessage.querySelector(".btn-refresh");
+        refreshButton.addEventListener("click", async () => { await regenerate(newMessage)});
+        const messageContent = newMessage.querySelector(".message-text");
+        //no streaming necessary if not receiving answer
+        if (!netStream) {
+            messageContent.innerHTML = msgText;
+        }
+        else {
+            let rawText = "";
+            for await (const chunk of netStream.stream) {
+                try {
+                    rawText += chunk.text();
+                    messageContent.innerHTML = marked.parse(rawText);
+                    messageContainer.scrollTo(0, messageContainer.scrollHeight);
+
+                } catch (error) {
+                    alert("Error, please report this to the developer. You might need to restart the page to continue normal usage. Error: " + error);
+                    console.error(error);
+                }
+            }
+            hljs.highlightAll();
+            return messageContent.innerHTML;
+        }
+    }
+    else {
+        messageRole = "You:";
+        newMessage.innerHTML = `
+                <div class="message-header">
+                    <h3 class="message-role">${messageRole}</h3>
+                </div>
+                <div class="message-role-api" style="display: none;">${sender}</div>
+                <p class="message-text">${msgText}</p>
+                `;
+        messageContainer.scrollTo(0, messageContainer.scrollHeight);
+    }
+}
+
+async function run(msg, selectedPersonality, history) {
+    if (!selectedPersonality) {
         return;
     }
-    const maxTokens = document.querySelector("#maxTokens");
-    const API_KEY = document.querySelector("#apiKeyInput");
-    const selectedPersonalityTitle = document.querySelector("input[name='personality']:checked + div .personality-title").innerText;
-    const selectedPersonalityDescription = document.querySelector("input[name='personality']:checked + div .personality-description").innerText;
-    const selectedPersonalityPrompt = document.querySelector("input[name='personality']:checked + div .personality-prompt").innerText;
-    const selectedPersonalityToneExamples = [];
-    //chat history
-    let chatHistory = [];
-    //get chat history from message container
-    const messageElements = messageContainer.querySelectorAll(".message");
-    messageElements.forEach(element => {
-        const messageroleapi = element.querySelector(".message-role-api").innerText;
-        const messagetext = element.querySelector(".message-text").innerText;
-        chatHistory.push({
-            role: messageroleapi,
-            parts: [{ text: messagetext }]
-        })
-    })
-    //reverse order of chat history
-    chatHistory.reverse();
+    const selectedPersonalityTitle = selectedPersonality.title;
+    const selectedPersonalityDescription = selectedPersonality.description;
+    const selectedPersonalityPrompt = selectedPersonality.prompt;
+    const selectedPersonalityToneExamples = selectedPersonality.tone;
 
-    if (API_KEY.value == "") {
+    if (!ApiKeyInput.value) {
         alert("Please enter an API key");
         return;
     }
 
+    let msgText = getSanitized(msg.value);
+    if (!msgText) {
+        return;
+    }
+    const genAI = new GoogleGenerativeAI(ApiKeyInput.value);
+    const model = genAI.getGenerativeModel({ model: "gemini-pro", safetySettings });
+    
+    //user msg handling
+    await insertMessage("user", msgText);
+    msg.value = "";
+    document.getElementById('messageInput').style.height = "2.5rem"; //This will reset messageInput box to its normal size.
+    if (!currentChat) {
+        const result = await model.generateContent('Please generate a short title for the following request from a user: ' + msgText);
+        const title = (await result.response).text();
+        currentChat = await addChatHistory(title, msgText);
+        document.querySelector(`#chat${currentChat}`).click();
+    }
+    else {
+        const currentChatHistory = await getChatById(currentChat);
+        currentChatHistory.content.push({ role: "user", txt: msgText });
+        await db.chats.put(currentChatHistory);
+    }
+
+    //model msg handling
     const generationConfig = {
-        maxOutputTokens: maxTokens.value,
-        temperature: 0.9
+        maxOutputTokens: maxTokensInput.value,
+        temperature: temperatureInput.value/100
     };
-    const genAI = new GoogleGenerativeAI(API_KEY.value);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    const chat = model.startChat({
+    const chat = await model.startChat({
         generationConfig, safetySettings,
         history: [
             {
@@ -534,50 +801,39 @@ async function run() {
                 parts: [{ text: `Okay. From now on, I shall play the role of ${selectedPersonalityTitle}. Your prompt and described personality will be used for the rest of the conversation.` }]
             },
             ...selectedPersonalityToneExamples,
-            ...chatHistory
+            ...history
         ]
-    })
-
-    //create new message div for the user's message then append to message container's top
-    const newMessage = document.createElement("div");
-    newMessage.classList.add("message");
-    newMessage.innerHTML = `
-            <h3 class="message-role">You:</h3>
-            <div class="message-role-api" style="display: none;">user</div>
-            <p class="message-text">${msgText}</p>
-            `;
-    messageContainer.insertBefore(newMessage, messageContainer.firstChild);
-
-    const result = await chat.sendMessageStream(msgText);
-
-    //create new message div for the model's reply then append to message container's top
-    const newReply = document.createElement("div");
-    newReply.classList.add("message");
-    newReply.classList.add("message-model");
-    newReply.innerHTML = `
-            <h3 class="message-role">${selectedPersonalityTitle}:</h3>
-            <div class="message-role-api" style="display: none;">model</div>
-            <p class="message-text">`;
-
-    //get the p element inside the message div
-    const replyText = newReply.querySelector(".message-text");
-
-
-    messageContainer.insertBefore(newReply, messageContainer.firstChild);
-
-    let rawText = "";
-    for await (const chunk of result.stream) {
-        rawText += chunk.text();
-
-        replyText.innerHTML = DOMPurify.sanitize(marked.parse(rawText));
-        void replyText.offsetHeight; // Force reflow
-        hljs.highlightAll();
-    }
+    });
+    const stream = await chat.sendMessageStream(msgText);
+    const replyHTML = await insertMessage("model", "", selectedPersonalityTitle, stream);
+    const currentChatHistory = await getChatById(currentChat);
+    currentChatHistory.content.push({ role: "model", personality: selectedPersonalityTitle, txt: replyHTML });
+    //this replaces the existing chat history in the DB
+    await db.chats.put(currentChatHistory);
 
     //save api key to local storage
-    localStorage.setItem("API_KEY", API_KEY.value);
-    localStorage.setItem("maxTokens", maxTokens.value);
+    localStorage.setItem("API_KEY", ApiKeyInput.value);
+    localStorage.setItem("maxTokens", maxTokensInput.value);
+    localStorage.setItem("TEMPERATURE", temperatureInput.value);
+}
 
+async function regenerate(messageElement){
+    const lastMessageElement = messageElement.previousElementSibling;
+    messageInput.value = lastMessageElement.querySelector(".message-text").textContent;
+    let i = 0;
+    for(let message of messageContainer.children){
+        if (messageElement == message) {
+            const newMessages = [...messageContainer.children].slice(0,i-1);
+            messageContainer.replaceChildren(...newMessages);
+            let currentChatHistory = await getChatById(currentChat);
+            currentChatHistory.content = currentChatHistory.content.slice(0,i-1);
+            await db.chats.put(currentChatHistory);
+            break;
+        }
+        i++;
+    }
+
+    run(messageInput, getSelectedPersonality(), getChatHistory());
 }
 
 //-------------------------------
