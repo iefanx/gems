@@ -80,7 +80,7 @@
     }
 
     a {
-        color: #3b82f6;
+        color: #777777;
     }
 
     input,
@@ -89,7 +89,7 @@
         border: 1px solid;
         padding: 0.5rem;
         border-radius: 0.5rem;
-        border: none;
+        border: gray;
         font-family: noto sans, sans-serif;
         font-size: 1rem;
     }
@@ -246,7 +246,8 @@
     }
 
     .personality-prompt {
-        display: none;
+        border: gray;
+        
     }
 
     .prompt-field {
@@ -433,7 +434,7 @@
     }
 
     .card-personality input {
-        display: none;
+        border: gray;
     }
 
     .btn-edit-card {
@@ -493,7 +494,7 @@
             width: calc(100dvw - 2rem);
             position: fixed;
             border-radius: 0;
-            display: none;
+            border: gray;
         }
 
         .navbar {
@@ -561,7 +562,7 @@
         }
 
         button {
-            background-color: #83b5f7;
+            background-color: #777777;
 
             color: #2b3d59;
         }
@@ -595,24 +596,30 @@
         }
 
         :focus {
-            outline: 1px solid #73859e;
+            outline: 1px solid #777777;
         }
 
 
 
         body {
-            background-color: #151e24;
-            color: #e4e4e4;
+            background-color: black;
+            color: #777777;
         }
 
         a {
-            color: #92d9eb;
+            color: #777777;
+        }
+
+        #form-add-personality {
+            background-color: black;
+            padding: 8px;
+
         }
 
 
 
         .sidebar {
-            background-color: #1a2733;
+            background-color: black;
         }
 
         .navbar {
@@ -624,18 +631,18 @@
         }
 
         .navbar-tab-highlight {
-            background-color: #22486b;
+            background-color: #777777;
 
             box-shadow: 0 0 1rem 0.05rem #29292aac;
         }
 
         button {
-            background-color: #22486b;
-            color: #c9d3ee;
+            background-color: #777777;
+            color: black;
         }
 
         button:hover {
-            background-color: #31689c;
+            background-color: #777777;
         }
 
         .btn-textual {
@@ -655,15 +662,15 @@
         input,
         textarea,
         select {
-            background-color: #283542;
+            background-color: black;
 
             color: #e4e4e4;
-            border: none;
+            border: gray
         }
 
         input::placeholder,
         textarea::placeholder {
-            color: #849caf;
+            color: #777777;
         }
 
 
@@ -695,7 +702,7 @@
                 </button>
                 <img src="https://upload.wikimedia.org/wikipedia/commons/f/f0/Google_Bard_logo.svg" id="gemin-pro-logo">
                 <div id="title-div">
-                    <div id="zodiac-branding">WebCore Ai </div>
+                    <div id="zodiac-branding"></div>
                     <div id="gemini-pro-branding">powered by Gemini Pro</div>
                 </div>
                 <button class="badge" id="btn-whatsnew">
@@ -749,8 +756,8 @@
 
 
             <div class="credits">
-                Made by fætalize
-                <a href="https://github.com/faetalize/zodiac">Source Code</a>
+                Made by iefan
+                
             </div>
         </div>
 
@@ -775,7 +782,7 @@
         </div>
 
         <div class="form" id="form-add-personality">
-            <h1>Add Personality</h1>
+            <h1>Personalities</h1>
             <label for="personalityNameInput">Personality Name:</label>
             <input type="text" placeholder="Personality Name" id="personalityNameInput" class="input-field"></input>
             <label for="personalityDescriptionInput">Personality Description:</label>
