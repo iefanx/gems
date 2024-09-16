@@ -17,11 +17,7 @@
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-VCHJXFGB08"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-VCHJXFGB08');
+  
 </script>
 
 <style>
@@ -217,6 +213,7 @@
     }
 
     .badge{
+        display: none;
         background-color: #253a5c;
         justify-self: end;
         border: 2px solid rgba(35, 108, 119, 0.508);
@@ -588,97 +585,164 @@
             background-color: #d2e2f7;
         }
     }
-
-    /* Dark theme styles */
-    @media (prefers-color-scheme: dark) {
-        :root {
-            color-scheme: dark;
-        }
-
-        :focus {
-            outline: 1px solid #777777;
-        }
-
-
-
-        body {
-            background-color: black;
-            color: #777777;
-        }
-
-        a {
-            color: #777777;
-        }
-
-        #form-add-personality {
-            background-color: black;
-            padding: 8px;
-
-        }
-
-
-
-        .sidebar {
-            background-color: black;
-        }
-
-        .navbar {
-            background-color: #00000047;
-        }
-
-        .navbar-tab {
-            color: #e4e4e4;
-        }
-
-        .navbar-tab-highlight {
-            background-color: #777777;
-
-            box-shadow: 0 0 1rem 0.05rem #29292aac;
-        }
-
-        button {
-            background-color: #777777;
-            color: black;
-        }
-
-        button:hover {
-            background-color: #777777;
-        }
-
-        .btn-textual {
-            color: #e4e4e4;
-            text-shadow: 0 0 10px #000000, 0 0 5px #181818;
-        }
-
-        .btn-textual:hover {
-            text-shadow: 0 0 10px #ffffff, 0 0 5px #dfdfdf;
-        }
-
-        .edit:hover {
-            text-shadow: 0 0 10px #ffffff, 0 0 5px #dfdfdf;
-            /* Change #00ff00 to the color you want */
-        }
-
-        input,
-        textarea,
-        select {
-            background-color: black;
-
-            color: #e4e4e4;
-            border: gray
-        }
-
-        input::placeholder,
-        textarea::placeholder {
-            color: #777777;
-        }
-
-
-        .message-model {
-            background-color: #1a2733;
-        }
+/* Dark theme styles */
+@media (prefers-color-scheme: dark) {
+    :root {
+        color-scheme: dark;
     }
 
+    :focus {
+        outline: 1px solid #888888; /* Slightly brighter focus color */
+    }
+
+    body {
+        background-color: #121212; /* Darker background for true dark mode */
+        color: #e0e0e0; /* Lighter text color for better readability */
+    }
+
+    a {
+        color: #9ecfff; /* Soft blue for links */
+    }
+
+    #form-add-personality {
+        background-color: #1f1f1f; /* Slightly lighter black for form background */
+        padding: 8px;
+        border: 1px solid #333; /* Add a border for clarity */
+        border-radius: 0.5rem; /* Rounded corners for a modern look */
+    }
+
+    .sidebar {
+        background-color: #1c1c1c; /* Sidebar with a dark gray background */
+        color: #e4e4e4; /* Light text for readability */
+        border-right: 1px solid #333; /* Separation border */
+    }
+
+    .navbar {
+        background-color: #2b2b2b; /* Darker background for the navbar */
+        border-bottom: 1px solid #444; /* Separation from sidebar */
+    }
+
+    .navbar-tab {
+        color: #b0b0b0; /* Muted text color for navbar tabs */
+    }
+
+    .navbar-tab-highlight {
+        background-color: #444444; /* Dark gray for the selected tab */
+        font-weight: bold;
+        box-shadow: 0 0 1rem 0.1rem #29292a;
+    }
+
+    button {
+        background-color: #333333; /* Dark button background */
+        color: #ffffff; /* Light text color */
+        border: 1px solid #555555; /* Defined border for buttons */
+        font-weight: 600;
+        border-radius: 0.5rem; /* Rounded corners */
+        padding: 0.75rem 1rem; /* Padding for consistent button size */
+        transition: background-color 0.2s ease, border-color 0.2s ease; /* Smooth hover transition */
+    }
+
+    button:hover {
+        background-color: #444444; /* Slightly lighter background on hover */
+        border-color: #666666; /* Border change on hover */
+    }
+
+    .btn-textual {
+        color: #b0b0b0; /* Muted gray color for textual buttons */
+        text-shadow: 0 0 10px #000000, 0 0 5px #181818; /* Soft text glow */
+    }
+
+    .btn-textual:hover {
+        text-shadow: 0 0 10px #ffffff, 0 0 5px #dfdfdf; /* Brighter glow on hover */
+    }
+
+    .edit:hover {
+        text-shadow: 0 0 10px #ffffff, 0 0 5px #dfdfdf; /* Same hover effect for edit buttons */
+    }
+
+    input, textarea, select {
+        background-color: #1e1e1e; /* Darker background for inputs */
+        color: #e4e4e4; /* Light text for contrast */
+        border: 1px solid #444444; /* Clearer border for dark mode */
+        padding: 0.75rem; /* Consistent padding */
+        border-radius: 0.5rem; /* Rounded inputs for a modern look */
+        font-size: 1rem;
+        line-height: 1.5;
+        transition: border-color 0.2s ease, background-color 0.2s ease; /* Smooth transition */
+        resize: vertical; /* Textarea can resize vertically */
+        box-sizing: border-box;
+    }
+
+    input:focus, textarea:focus, select:focus {
+        border-color: #5a9efc; /* Bright blue border on focus for accessibility */
+        background-color: #292929; /* Slightly lighter background on focus */
+        outline: none; /* Remove default outline */
+    }
+
+    input::placeholder, textarea::placeholder {
+        color: #888888; /* Lighter gray for placeholder text */
+        font-style: italic; /* Italicized placeholder for distinction */
+    }
+
+    .message-model {
+        background-color: #1a2733; /* Dark blueish background for message models */
+        border: 1px solid #2b3a47; /* Subtle border for message model */
+        border-radius: 0.5rem;
+        padding: 1rem; /* Add padding for space */
+        color: #e4e4e4; /* Text color */
+    }
+
+    .message-box {
+        background-color: #1e1e1e; /* Dark background for the message input box */
+        padding: 1rem;
+        border-radius: 0.5rem; /* Rounded corners */
+        border: 1px solid #333; /* Clearer border for the message box */
+    }
+
+    #messageInput {
+        background-color: #2a2a2a; /* Slightly lighter background for text input */
+        border: 1px solid #444444; /* Clear border for input field */
+        color: #f0f0f0; /* Light color for text */
+        padding: 10px; /* Comfortable padding for text input */
+        border-radius: 0.5rem;
+        width: 100%; /* Full width */
+        min-height: 150px; /* Default height for text area */
+        resize: vertical; /* Only vertical resizing allowed */
+    }
+
+    #messageInput::placeholder {
+        color: #888888; /* Placeholder color for text area */
+    }
+
+    #btn-send {
+        background-color: #333333; /* Matching dark button */
+        color: #ffffff;
+        border: 1px solid #555555;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    #btn-send:hover {
+        background-color: #444444; /* Slight hover effect */
+        border-color: #666666;
+    }
+
+    #btn-reset-chat {
+        background-color: #1f1f1f; /* Dark background for the reset button */
+        color: #ffffff; /* White text for contrast */
+        border: 1px solid #333333; /* Border to define the button */
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem; /* Consistent padding */
+        cursor: pointer;
+    }
+
+    #btn-reset-chat:hover {
+        background-color: #313131; /* Hover effect for reset button */
+        border-color: #444444;
+    }
+}
     #btn-reset-chat {
         background-color: #1a2733;
         color: #e4e4e4;
@@ -703,7 +767,7 @@
                 <img src="https://upload.wikimedia.org/wikipedia/commons/f/f0/Google_Bard_logo.svg" id="gemin-pro-logo">
                 <div id="title-div">
                     <div id="zodiac-branding"></div>
-                    <div id="gemini-pro-branding">powered by Gemini Pro</div>
+                    <div id="gemini-pro-branding">Custom Gems</div>
                 </div>
                 <button class="badge" id="btn-whatsnew">
                     <span id="badge-version"></span>
@@ -734,7 +798,7 @@
                     </label>
                     <div id="personalitiesDiv"></div>
                     <div class="btn-array" id="btn-array-personality-section">
-                        <button id="btn-add-personality">Add Personality</button>
+                        <button id="btn-add-personality">Build</button>
                         <button id="btn-import-personality">Import</button>
                         <button id="btn-clearall-personality">Clear All</button>
                     </div>
