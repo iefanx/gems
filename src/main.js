@@ -766,7 +766,7 @@ async function run(msg, selectedPersonality, history) {
         return;
     }
     const genAI = new GoogleGenerativeAI(ApiKeyInput.value);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", safetySettings });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-8b", safetySettings });
     
     //user msg handling
     await insertMessage("user", msgText);
